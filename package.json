@@ -1,12 +1,36 @@
 {
   "name": "next-codablejson-plugin",
-  "version": "0.0.1",
-  "author": "https://github.com/serg-and",
+  "version": "0.1.0",
+  "description": "Automatically transform your Next.js Pages to use CodableJSON with SWC",
+  "keywords": [
+    "swc-plugin"
+  ],
+  "homepage": "https://github.com/serg-and/next-codablejson-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/serg-and/next-codablejson-plugin/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/serg-and/next-codablejson-plugin.git"
+    "url": "git+https://github.com/serg-and/next-codablejson-plugin.git"
+  },
+  "license": "MIT",
+  "author": "https://github.com/serg-and",
+  "type": "module",
+  "exports": {
+    ".": "./dist/next_codablejson.wasm",
+    "./tools": "./dist/tools.js",
+    "./client": "./dist/client.js"
   },
   "main": "./dist/next_codablejson.wasm",
+  "directories": {
+    "test": "tests"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepack": "tsc && cp target/wasm32-wasip1/release/next_codablejson.wasm ./dist"
+  },
   "dependencies": {
     "codablejson": "^0.2.0",
     "hoist-non-react-statics": "^3.3.2"
@@ -14,28 +38,7 @@
   "devDependencies": {
     "@types/hoist-non-react-statics": "^3.3.7",
     "@types/react": "^18.3.28",
-    "next": "^16.2.2",
+    "next": "^16.1.6",
     "typescript": "^5.9.3"
-  },
-  "exports": {
-    ".": "./dist/next_codablejson.wasm",
-    "./tools": "./dist/tools.js",
-    "./client": "./dist/client.js"
-  },
-  "bugs": {
-    "url": "https://github.com/serg-and/next-codablejson-plugin/issues"
-  },
-  "description": "Automatically transform your Next.js Pages to use CodableJSON with SWC",
-  "files": [
-    "dist"
-  ],
-  "homepage": "https://github.com/serg-and/next-codablejson-plugin#readme",
-  "keywords": [
-    "swc-plugin"
-  ],
-  "license": "MIT",
-  "scripts": {
-    "prepack": "tsc && cp target/wasm32-wasip1/release/next_codablejson.wasm ./dist"
-  },
-  "type": "module"
+  }
 }

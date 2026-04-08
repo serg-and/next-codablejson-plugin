@@ -1,6 +1,6 @@
 [package]
 name = "next_codablejson"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 authors = ["https://github.com/serg-and"]
 description = "SWC Plugin of CodableJSON for Next.js"
