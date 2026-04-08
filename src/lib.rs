@@ -1,0 +1,106 @@
+use std::path::{Component, Path};
+
+use serde::Deserialize;
+use swc_core::{
+    common::plugin::metadata::TransformPluginMetadataContextKind,
+    ecma::{ast::*, visit::*},
+    plugin::{plugin_transform, proxies::TransformPluginProgramMetadata},
+};
+
+use app::*;
+use page::*;
+
+pub mod app;
+pub mod page;
+mod utils;
+
+static BAD_CONFIG: &str = "next-codablejson-plugin: Failed to parse config,
+
+Provide a plugin config in your next.config.(js|ts) like:
+
+module.exports = {
+  experimental: {
+    swcPlugins: [
+      [
+        'next-codablejson-plugin',
+        {
+          excluded: ['someProps'], (optional)
+        }
+      ]
+    ],
+  }
+}
+";
+
+#[derive(Debug, Clone, Deserialize, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Config {
+    #[serde(default)]
+    pub excluded: Vec<String>,
+}
+
+pub enum DirType {
+    Page,
+    App,
+}
+
+#[plugin_transform]
+pub fn process_transform(program: Program, metadata: TransformPluginProgramMetadata) -> Program {
+    let config = match metadata.get_transform_plugin_config() {
+        Some(plugin_config_str) => {
+            serde_json::from_str::<Config>(&plugin_config_str).expect(BAD_CONFIG)
+        }
+        None => Config::default(),
+    };
+
+    let raw_cwd = metadata
+        .get_context(&TransformPluginMetadataContextKind::Cwd)
+        .unwrap();
+
+    let raw_path = metadata
+        .get_context(&TransformPluginMetadataContextKind::Filename)
+        .unwrap();
+
+    // Windows path separator -> Unix path separator
+    let cwd = &raw_cwd.replace('\\', "/");
+    let path = &raw_path.replace('\\', "/");
+
+    // overlapping prefix
+    let prefix = cwd
+        .chars()
+        .zip(path.chars())
+        .take_while(|(a, b)| a == b)
+        .map(|(a, _)| a)
+        .collect::<String>();
+
+    if let Some(relative_path) = path.strip_prefix(&prefix) {
+        let mut is_page = false;
+
+        for component in Path::new(relative_path).components() {
+            match component {
+                Component::Normal(str) => match str.to_str().unwrap_or_default() {
+                    // skip non-source stuff
+                    "node_modules" => {
+                        return program;
+                    }
+                    "pages" => {
+                        is_page = true;
+                        break;
+                    }
+                    _ => {}
+                },
+                _ => {}
+            }
+        }
+
+        // consider server components outside the app directory
+        let dir_type = if is_page { DirType::Page } else { DirType::App };
+
+        match dir_type {
+            DirType::Page => program.apply(&mut visit_mut_pass(transform_page(config))),
+            DirType::App => program.apply(&mut visit_mut_pass(transform_app(config))),
+        }
+    } else {
+        program
+    }
+}

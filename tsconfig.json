@@ -1,0 +1,16 @@
+{
+  "include": ["tools"],
+  "compilerOptions": {
+    "declaration": true,
+    "sourceMap": true,
+    "target": "ESNext",
+    "rootDir": "tools",
+    "outDir": "dist",
+    "strict": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "skipLibCheck": true
+  }
+}
