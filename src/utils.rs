@@ -4,11 +4,11 @@ use swc_core::{
 };
 
 use crate::page::{
-    NEXT_SSG_PROPS_LOCAL, NEXT_SSG_PROPS_ORIG, CODABLEJSON_INIT_PROPS_LOCAL, CODABLEJSON_PAGE_LOCAL,
-    CODABLEJSON_PROPS_LOCAL,
+    CODABLEJSON_INIT_PROPS_LOCAL, CODABLEJSON_PAGE_LOCAL, CODABLEJSON_PROPS_LOCAL,
+    NEXT_SSG_PROPS_LOCAL, NEXT_SSG_PROPS_ORIG,
 };
 
-pub fn codablejson_import_decl(codablejson_import_name: &str) -> ModuleItem {
+pub fn codablejson_import_decl(codablejson_import_name: &str, source: &str) -> ModuleItem {
     ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
         with: None,
         phase: ImportPhase::Evaluation,
@@ -25,7 +25,7 @@ pub fn codablejson_import_decl(codablejson_import_name: &str) -> ModuleItem {
         })],
         src: Box::new(Str {
             span: DUMMY_SP,
-            value: "next-codablejson-plugin/tools".into(),
+            value: source.into(),
             raw: None,
         }),
     }))

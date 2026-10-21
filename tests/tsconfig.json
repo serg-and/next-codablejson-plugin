@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["../tools", "./runtime.test.tsx"],
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true,
+    "types": ["bun"]
+  }
+}
