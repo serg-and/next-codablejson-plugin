@@ -1,6 +1,6 @@
 {
   "name": "next-codablejson-plugin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Automatically transform your Next.js Pages to use CodableJSON with SWC",
   "keywords": [
     "swc-plugin"

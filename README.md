@@ -31,6 +31,7 @@ SWC plugins must match your Next.js version, use this table to check which versi
 | plugin version | Next.js versions |
 | :------------- | :--------------- |
 | `0.1.0`        | `^16.1.6`        |
+| `0.2.0`        | `^16.1.6`        |
 
 ## Usage
 
