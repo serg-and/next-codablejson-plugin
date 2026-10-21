@@ -32,7 +32,7 @@
     "typecheck": "tsc --noEmit && tsc --project tests/tsconfig.json",
     "test:runtime": "tsc --project tests/tsconfig.json && bun test tests/runtime.test.tsx",
     "build:release": "cargo rustc --lib --release --target wasm32-wasip1 -- -C link-arg=--allow-undefined",
-    "prepack": "tsc && cp target/wasm32-wasip1/release/next_codablejson.wasm ./dist"
+    "prepack": "bun x --no-install --package typescript tsc && cp target/wasm32-wasip1/release/next_codablejson.wasm ./dist"
   },
   "dependencies": {
     "codablejson": "^0.2.0",
