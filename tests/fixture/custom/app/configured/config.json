@@ -1,0 +1,9 @@
+{
+  "excluded": [
+    "smth"
+  ],
+  "customCoder": {
+    "toolsModule": "@/lib/codable-tools",
+    "clientModule": "@/lib/codable-client"
+  }
+}

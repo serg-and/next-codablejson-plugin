@@ -1,19 +1,27 @@
 "use client";
 
-import { CodableJSONProps, withCodableJSONPage } from "./tools";
+import { codablejson, type Coder } from "codablejson";
+import { type CodableJSONProps, createCodableJSONTools } from "./tools";
 import * as React from "react";
 
-export default function CodableJSONComponent<
-  P extends JSX.IntrinsicAttributes,
->({
-  component,
-  props,
-  children,
-}: {
-  component: React.ComponentType<P>;
-  props: CodableJSONProps<P>;
-  children?: React.ReactNode;
-}) {
-  const WithCodableJSON = withCodableJSONPage(component);
-  return <WithCodableJSON {...props}>{children}</WithCodableJSON>;
+/** Call from a module marked "use client" that imports the shared coder. */
+export function createCodableJSONComponent(coder: Coder) {
+  const { withCodableJSONPage } = createCodableJSONTools(coder);
+
+  return function CodableJSONComponent<
+    P extends object,
+  >({
+    component,
+    props,
+    children,
+  }: {
+    component: React.ComponentType<P>;
+    props: CodableJSONProps<P>;
+    children?: React.ReactNode;
+  }) {
+    const WithCodableJSON = withCodableJSONPage(component);
+    return <WithCodableJSON {...props}>{children}</WithCodableJSON>;
+  };
 }
+
+export default createCodableJSONComponent(codablejson);

@@ -1,0 +1,7 @@
+  x next-codablejson-plugin: customCoder.clientModule is required when using data-codable with a custom coder.
+    ,-[input.js:11:1]
+ 10 |       <ServerComponent date={date} />
+ 11 |       <ClientComponent date={date} {...rest} data-codable />
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 12 |     </>
+    `----

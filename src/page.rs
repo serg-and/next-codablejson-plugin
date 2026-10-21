@@ -52,6 +52,7 @@ struct TransformTarget {
 
 struct PageTransformer {
     excluded: Vec<String>,
+    tools_module: String,
 
     props: TransformTarget,
     page: TransformTarget,
@@ -65,6 +66,7 @@ struct PageTransformer {
 
 pub fn transform_page(config: Config) -> impl VisitMut {
     PageTransformer {
+        tools_module: config.tools_module().to_string(),
         excluded: config.excluded,
 
         props: Default::default(),
@@ -464,19 +466,19 @@ impl VisitMut for PageTransformer {
         if !self.props.skip {
             prepend_stmt(
                 &mut new_items,
-                codablejson_import_decl(CODABLEJSON_PROPS_IMPORTED),
+                codablejson_import_decl(CODABLEJSON_PROPS_IMPORTED, &self.tools_module),
             );
         }
         if self.use_init_props {
             prepend_stmt(
                 &mut new_items,
-                codablejson_import_decl(CODABLEJSON_INIT_PROPS_IMPORTED),
+                codablejson_import_decl(CODABLEJSON_INIT_PROPS_IMPORTED, &self.tools_module),
             );
         }
         if !self.page.skip {
             prepend_stmt(
                 &mut new_items,
-                codablejson_import_decl(CODABLEJSON_PAGE_IMPORTED),
+                codablejson_import_decl(CODABLEJSON_PAGE_IMPORTED, &self.tools_module),
             );
         }
 

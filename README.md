@@ -77,6 +77,167 @@ In `next.config.js`, you can use the `excluded` option to exclude specific prope
 ['next-codablejson-plugin', { excluded: ["someProp"] }],
 ```
 
+### Custom types and coders
+
+Use `customCoder.toolsModule` to supply helpers bound to your own CodableJSON
+`Coder`. Add `customCoder.clientModule` when using `data-codable` in App Router.
+No Next config wrapper is required.
+
+Install `codablejson` as a direct dependency of your application:
+
+```sh
+npm install codablejson
+```
+
+Define a shared coder with your custom types:
+
+```ts
+// src/lib/codable.ts
+import { Coder } from "codablejson";
+
+export class Money {
+  constructor(public cents: number) {}
+
+  format() {
+    return (this.cents / 100).toFixed(2);
+  }
+}
+
+const coder = new Coder();
+coder.addType(
+  "Money",
+  (value): value is Money => value instanceof Money,
+  (value) => value.cents,
+  (cents) => new Money(cents),
+  { Class: Money, isFlat: true },
+);
+
+export default coder;
+```
+
+Create a tools module with the named exports used by the plugin:
+
+```ts
+// src/lib/codable-tools.ts
+import { createCodableJSONTools } from "next-codablejson-plugin/tools";
+import coder from "./codable";
+
+export const {
+  serialize,
+  deserializeProps,
+  withCodableJSONProps,
+  withCodableJSONInitProps,
+  withCodableJSONPage,
+} = createCodableJSONTools(coder);
+```
+
+#### Pages Router
+
+Only `toolsModule` is needed. It provides both encoding in `getServerSideProps`,
+`getStaticProps`, or `getInitialProps`, and decoding in the page wrapper.
+
+```js
+// next.config.js
+module.exports = {
+  experimental: {
+    swcPlugins: [
+      ["next-codablejson-plugin", {
+        customCoder: {
+          toolsModule: "@/lib/codable-tools",
+        },
+      }],
+    ],
+  },
+};
+```
+
+```tsx
+// src/pages/price.tsx
+import { Money } from "@/lib/codable";
+
+export function getServerSideProps() {
+  return { props: { price: new Money(1250) } };
+}
+
+export default function PricePage({ price }: { price: Money }) {
+  return <p>{price.format()}</p>;
+}
+```
+
+#### App Router
+
+Create a separate client module that default-exports the decoding component.
+Keep `"use client"` at the top of this file:
+
+```tsx
+// src/lib/codable-client.tsx
+"use client";
+
+import { createCodableJSONComponent } from "next-codablejson-plugin/client";
+import coder from "./codable";
+
+export default createCodableJSONComponent(coder);
+```
+
+Configure both module paths:
+
+```js
+["next-codablejson-plugin", {
+  customCoder: {
+    toolsModule: "@/lib/codable-tools",
+    clientModule: "@/lib/codable-client",
+  },
+}]
+```
+
+Continue using `data-codable` as usual:
+
+```tsx
+// src/app/price/page.tsx
+import { Money } from "@/lib/codable";
+import Price from "./Price";
+
+export default function PricePage() {
+  return <Price price={new Money(1250)} data-codable />;
+}
+```
+
+```tsx
+// src/app/price/Price.tsx
+"use client";
+
+import type { Money } from "@/lib/codable";
+
+export default function Price({ price }: { price: Money }) {
+  return <p>{price.format()}</p>;
+}
+```
+
+If `customCoder` is configured and a transformed component uses `data-codable`
+without a `clientModule`, compilation fails with:
+
+```text
+next-codablejson-plugin: customCoder.clientModule is required when using data-codable with a custom coder.
+```
+
+`clientModule` may be omitted when no App Router `data-codable` transformation is
+needed. With no `customCoder` option, the plugin uses its default coder and modules.
+The `excluded` option can be combined with `customCoder` for Pages Router.
+
+Module paths are emitted as import specifiers in transformed source files. Use a
+configured alias (these examples assume `@/*` maps to `src/*`), an absolute path,
+or a package specifier. Relative paths resolve from each transformed file, not
+from `next.config.js`.
+
+After changing `customCoder` options, clear Next.js's `.next` build cache and
+restart or rebuild so cached SWC transforms do not retain the previous settings.
+
+The coder and its type definitions must work on both server and browser, with
+matching registrations on both sides. Keep the tools module free of `"use client"`
+and `server-only` dependencies: it is used by both server code and Pages Router
+client code. The separate client module establishes the App Router client boundary;
+the coder itself is never passed across that boundary as a prop.
+
 ## Bug Report
 
 ⚠️ Keep in mind: SWC Plugin is still an experimental feature for Next.js

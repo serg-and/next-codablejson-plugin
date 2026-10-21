@@ -1,7 +1,7 @@
 use std::vec;
 
 use swc_core::{
-    common::{util::take::Take, DUMMY_SP},
+    common::{errors::HANDLER, util::take::Take, DUMMY_SP},
     ecma::{
         ast::*,
         utils::{is_valid_ident, prepend_stmts},
@@ -16,15 +16,23 @@ static SERIALIZER_FUNCTION: &str = "serialize";
 static DESERIALIZER_COMPONENT: &str = "CodableJSONComponent";
 static DESERIALIZER_PROPS_ATTR: &str = "props";
 static DESERIALIZER_PROPS_COMPONENT: &str = "component";
-static TOOLS_SRC: &str = "next-codablejson-plugin/tools";
 static CLIENT_SRC: &str = "next-codablejson-plugin/client";
 
 struct AppTransformer {
     transformed: bool,
+    tools_module: String,
+    client_module: Option<String>,
 }
 
-pub fn transform_app(_: Config) -> impl VisitMut {
-    AppTransformer { transformed: false }
+pub fn transform_app(config: Config) -> impl VisitMut {
+    AppTransformer {
+        transformed: false,
+        tools_module: config.tools_module().to_string(),
+        client_module: match config.custom_coder {
+            Some(coder) => coder.client_module,
+            None => Some(CLIENT_SRC.to_string()),
+        },
+    }
 }
 
 trait JSXUtil {
@@ -85,7 +93,7 @@ impl VisitMut for AppTransformer {
                             is_type_only: false,
                         }
                         .into()],
-                        src: Box::new(TOOLS_SRC.into()),
+                        src: Box::new(self.tools_module.clone().into()),
                         ..ImportDecl::dummy()
                     })),
                     ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
@@ -94,7 +102,7 @@ impl VisitMut for AppTransformer {
                             span: DUMMY_SP,
                         }
                         .into()],
-                        src: Box::new(CLIENT_SRC.into()),
+                        src: Box::new(self.client_module.as_ref().unwrap().clone().into()),
                         ..ImportDecl::dummy()
                     })),
                 ]
@@ -124,6 +132,16 @@ impl VisitMut for AppTransformer {
         });
 
         if found {
+            if self.client_module.is_none() {
+                HANDLER.with(|handler| {
+                    handler.span_err(
+                        elem.opening.span,
+                        "next-codablejson-plugin: customCoder.clientModule is required when using data-codable with a custom coder.",
+                    );
+                });
+                return;
+            }
+
             // attrs -> obj props
             let list: Vec<PropOrSpread> = elem
                 .opening

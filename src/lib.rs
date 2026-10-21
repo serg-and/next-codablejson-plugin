@@ -25,6 +25,10 @@ module.exports = {
         'next-codablejson-plugin',
         {
           excluded: ['someProps'], (optional)
+          customCoder: { (optional)
+            toolsModule: '@/lib/codable-tools',
+            clientModule: '@/lib/codable-client', (optional; required for data-codable)
+          },
         }
       ]
     ],
@@ -37,6 +41,22 @@ module.exports = {
 pub struct Config {
     #[serde(default)]
     pub excluded: Vec<String>,
+    pub custom_coder: Option<CustomCoder>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CustomCoder {
+    pub tools_module: String,
+    pub client_module: Option<String>,
+}
+
+impl Config {
+    pub fn tools_module(&self) -> &str {
+        self.custom_coder
+            .as_ref()
+            .map_or("next-codablejson-plugin/tools", |coder| &coder.tools_module)
+    }
 }
 
 pub enum DirType {

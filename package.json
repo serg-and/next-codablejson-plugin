@@ -29,6 +29,9 @@
     "dist"
   ],
   "scripts": {
+    "typecheck": "tsc --noEmit && tsc --project tests/tsconfig.json",
+    "test:runtime": "tsc --project tests/tsconfig.json && bun test tests/runtime.test.tsx",
+    "build:release": "cargo rustc --lib --release --target wasm32-wasip1 -- -C link-arg=--allow-undefined",
     "prepack": "tsc && cp target/wasm32-wasip1/release/next_codablejson.wasm ./dist"
   },
   "dependencies": {
@@ -36,8 +39,10 @@
     "hoist-non-react-statics": "^3.3.2"
   },
   "devDependencies": {
+    "@types/bun": "^1.4.3",
     "@types/hoist-non-react-statics": "^3.3.7",
     "@types/react": "^18.3.28",
+    "@types/react-dom": "^18",
     "next": "^16.1.6",
     "typescript": "^5.9.3"
   }
