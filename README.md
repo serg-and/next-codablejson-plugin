@@ -30,8 +30,37 @@ SWC plugins must match your Next.js version, use this table to check which versi
 
 | plugin version | Next.js versions |
 | :------------- | :--------------- |
-| `0.1.0`        | `^16.1.6`        |
-| `0.2.0`        | `^16.1.6`        |
+| `0.1.0`        | SWC 54 (original target: `16.1.6`) |
+| `0.2.0`        | SWC 54; incompatible with `16.4.2` |
+| `0.2.1`        | `16.4.2` (SWC 79) |
+
+Next.js upgrades can change the SWC plugin ABI even within the same major version.
+The current compiler regression suite pins Next.js to `16.4.2`. To rebuild the
+WASM and test it with the actual Next.js compiler, use Node.js 22.12+ and Bun:
+
+```sh
+bun install --frozen-lockfile
+rustup target add wasm32-wasip1
+bun run test:compiler
+```
+
+This builds and packages `dist/next_codablejson.wasm`, then checks Pages Router
+wrappers, Date/BigInt JSON transport, and default/custom App Router transforms.
+Run it again when changing Next.js or SWC versions. The generated `dist` directory
+is ignored by Git and included in the npm package.
+
+### Publishing locally
+
+With dependencies and the Rust WASM target installed as above, run:
+
+```sh
+npm publish --dry-run --access public
+npm publish --access public
+```
+
+The `prepublishOnly` hook runs the runtime tests, rebuilds the WASM, and verifies
+it with Next.js 16.4.2 before npm packages the release. The second command
+publishes to npm and requires an account with package publishing access.
 
 ## Usage
 
